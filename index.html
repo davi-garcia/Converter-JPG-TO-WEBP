@@ -1,13 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Image Converter</title>
-    <script src="script.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to WebP Converter</title>
+    <style>
+        .preview-container img {
+            width: 150px;
+            height: 150px;
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
-    <input type="file" id="imageInput" multiple>
-    <button onclick="uploadImages()">Upload Images</button>
-    <button onclick="convertAndDownload()" disabled>Convert and Download</button>
-    <div id="output"></div>
+    <input type="file" id="image-input" multiple>
+    <div class="preview-container"></div>
+    <a id="download-link" download>Download WebP image</a>
+    <script src="script.js"></script>
 </body>
 </html>

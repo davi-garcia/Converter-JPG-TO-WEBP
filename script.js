@@ -1,26 +1,38 @@
-let images = [];
+const input = document.getElementById('image-input');
+const previewContainer = document.querySelector('.preview-container');
+const downloadLink = document.getElementById('download-link');
 
-function uploadImages() {
-    const input = document.getElementById('imageInput');
-    for (const file of input.files) {
-        images.push(file);
-    }
-    // Display the uploaded images in the 'output' div
-    // Implement image conversion logic here
-    enableDownloadButton();
-}
-
-function enableDownloadButton() {
-    const button = document.getElementById('downloadButton');
-    button.disabled = false;
-}
-
-function convertAndDownload() {
-    // Convert the images using a library like `fabric.js` or `canvas.js`
+const convertImageToWebP = (image) => {
+    // Conversion logic using blip library or another method
     // ...
-    // Create a single download link for all the images
-    const link = document.createElement('a');
-    link.download = 'converted_images.zip';
-    link.href = 'data:application/zip;base64,...';
-    link.click();
-}
+
+    // Return the converted WebP image as a Blob object
+    return convertedWebPImage;
+};
+
+input.addEventListener('change', (event) => {
+    const files = event.target.files;
+
+    [...files].forEach((file) => {
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+
+            img.onload = () => {
+                const webPImage = convertImageToWebP(img);
+
+                const previewImage = document.createElement('img');
+                previewImage.src = URL.createObjectURL(webPImage);
+
+                previewContainer.appendChild(previewImage);
+
+                // Create download link
+                downloadLink.href = URL.createObjectURL(webPImage);
+            };
+        };
+
+        reader.readAsDataURL(file);
+    });
+});
