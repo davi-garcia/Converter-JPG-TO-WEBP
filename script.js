@@ -1,67 +1,55 @@
 const fileInput = document.getElementById('file-input');
 const convertButton = document.getElementById('convert-button');
 const output = document.getElementById('output');
-const downloadButton = document.getElementById('download-button');
 
-const conversionQueue = [];
-let currentConversionIndex = 0;
-
-fileInput.addEventListener('change', (event) => {
-    const files = event.target.files;
-    conversionQueue.length = 0;
-    currentConversionIndex = 0;
-    output.innerHTML = '';
-    downloadButton.disabled = true;
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file.type.startsWith('image/jpeg') || file.type.startsWith('image/jpg')) {
-            conversionQueue.push(file);
-        }
+fileInput.addEventListener('change', () => {
+    const files = fileInput.files;
+    if (files.length === 0) {
+        return;
     }
-    convertButton.disabled = conversionQueue.length === 0;
+    output.innerHTML = '';
+    convertButton.disabled = false;
+
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const originalImage = new Image();
+        originalImage.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+
+            const context = canvas.getContext('2d');
+            context.drawImage(originalImage, 0, 0);
+
+            const imageBlob = new Blob([canvas.toDataURL('image/webp')], {
+                type: 'image/webp',
+            });
+
+            const url = URL.createObjectURL(imageBlob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = `${file.name}.webp`;
+            downloadLink.click();
+            URL.revokeObjectURL(url);
+        };
+        originalImage.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    convertButton.disabled = true;
 });
 
 convertButton.addEventListener('click', () => {
+    if (fileInput.files.length === 0) {
+        return;
+    }
+    const file = fileInput.files[0];
+    const fileInputClone = fileInput.cloneNode(true);
+    fileInputClone.value = '';
+    fileInput.parentNode.insertBefore(fileInputClone, fileInput.nextSibling);
+    fileInput.files = [];
+    fileInput.disabled = true;
+    fileInput.parentNode.removeChild(fileInput);
     convertButton.disabled = true;
-    const worker = new Worker('converter.js');
-    worker.postMessage(conversionQueue[currentConversionIndex]);
-    worker.addEventListener('message', (event) => {
-        if (event.data.type === 'progress') {
-            output.innerHTML += `<p>Converting ${conversionQueue[currentConversionIndex].name} ${Math.round(event.data.percentage * 100)}%</p>`;
-        } else if (event.data.type === 'result') {
-            output.innerHTML += `<p>Converted ${conversionQueue[currentConversionIndex].name}</p>`;
-            currentConversionIndex++;
-            if (currentConversionIndex < conversionQueue.length) {
-                worker.postMessage(conversionQueue[currentConversionIndex]);
-            } else {
-                convertButton.disabled = false;
-                downloadButton.disabled = false;
-                worker.terminate();
-            }
-        }
-    });
-    if (currentConversionIndex === 0) {
-        worker.postMessage(conversionQueue[currentConversionIndex]);
-    }
 });
-
-function downloadAll() {
-    const zip = new JSZip();
-    const promises = [];
-    for (let i = 0; i < conversionQueue.length; i++) {
-        const file = conversionQueue[i];
-        const filename = file.name.replace(/\.[^/.]*$/, '').toLowerCase();
-        promises.push(
-            fetch(URL.createObjectURL(file)).then((response) => response.blob())
-            .then((blob) => zip.file(`${filename}.webp`, blob))
-            .then(() => URL.revokeObjectURL(blob))
-        );
-    }
-    Promise.all(promises).then(() => {
-        zip.generateAsync({ type: 'blob' }).then((blob) => {
-            saveAs(blob, 'ConvertedImages.zip');
-        });
-    });
-}
-
-downloadButton.addEventListener('click', downloadAll);
