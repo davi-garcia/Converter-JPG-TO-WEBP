@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>JPEG to WEBP Converter</title>
-</head>
-<body>
-    <input type="file" id="imageInput" multiple>
-    <button onclick="convertImages()">Convert to WEBP</button>
+  <head>
+    <title>Convert JPG to WEBP</title>
+  </head>
+  <body>
+    <input type="file" id="image-input" multiple>
+    <button id="convert-button" onclick="convertImages()">Convert to WEBP</button>
     <div id="output"></div>
-</body>
+    <script src="converter.js"></script>
+  </body>
 </html>
